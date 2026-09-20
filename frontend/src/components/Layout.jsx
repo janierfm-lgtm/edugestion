@@ -7,6 +7,7 @@ const navItems = [
   { to: '/enrollments', label: 'Matrículas', roles: ['admin', 'docente'] },
   { to: '/grades', label: 'Notas', roles: null },
   { to: '/attendance', label: 'Asistencia', roles: null },
+  { to: '/users', label: 'Usuarios', roles: ['admin'] },
 ];
 
 export default function Layout({ children }) {
