@@ -8,6 +8,7 @@ import Courses from './pages/Courses';
 import Enrollments from './pages/Enrollments';
 import Grades from './pages/Grades';
 import Attendance from './pages/Attendance';
+import Users from './pages/Users';
 
 function LoginRoute() {
   const { user } = useAuth();
@@ -65,6 +66,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <Layout>
               <Attendance />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute roles={['admin']}>
+            <Layout>
+              <Users />
             </Layout>
           </ProtectedRoute>
         }
