@@ -10,6 +10,9 @@ const router = express.Router();
 router.use(authenticate, activityLogger('course'));
 
 router.get('/', controller.list);
+// IMPORTANTE: esta ruta va antes de "/:id" para que "teachers" no se
+// interprete como un id de curso.
+router.get('/teachers', controller.listTeachers);
 router.get('/:id', controller.getById);
 
 router.post(
