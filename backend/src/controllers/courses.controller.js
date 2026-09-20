@@ -14,6 +14,17 @@ async function list(req, res, next) {
   }
 }
 
+async function listTeachers(req, res, next) {
+  try {
+    const result = await db.query(
+      "SELECT id, name FROM users WHERE role = 'docente' ORDER BY name",
+    );
+    return res.json(result.rows);
+  } catch (err) {
+    return next(err);
+  }
+}
+
 async function getById(req, res, next) {
   try {
     const result = await db.query('SELECT * FROM courses WHERE id = $1', [req.params.id]);
@@ -67,4 +78,4 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { list, getById, create, update, remove };
+module.exports = { list, listTeachers, getById, create, update, remove };
