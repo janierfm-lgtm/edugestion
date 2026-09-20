@@ -6,7 +6,8 @@ export default function Courses() {
   const { user } = useAuth();
   const canManage = user && ['admin', 'docente'].includes(user.role);
   const [courses, setCourses] = useState([]);
-  const [form, setForm] = useState({ code: '', name: '', description: '' });
+  const [teachers, setTeachers] = useState([]);
+  const [form, setForm] = useState({ code: '', name: '', description: '', teacher_id: '' });
   const [error, setError] = useState('');
 
   async function loadCourses() {
@@ -14,16 +15,25 @@ export default function Courses() {
     setCourses(data);
   }
 
+  async function loadTeachers() {
+    const { data } = await apiClient.get('/courses/teachers');
+    setTeachers(data);
+  }
+
   useEffect(() => {
     loadCourses();
+    loadTeachers();
   }, []);
 
   async function handleCreate(e) {
     e.preventDefault();
     setError('');
     try {
-      await apiClient.post('/courses', form);
-      setForm({ code: '', name: '', description: '' });
+      await apiClient.post('/courses', {
+        ...form,
+        teacher_id: form.teacher_id || null,
+      });
+      setForm({ code: '', name: '', description: '', teacher_id: '' });
       loadCourses();
     } catch (err) {
       setError(err.response?.data?.error || 'No se pudo crear el curso');
@@ -113,6 +123,20 @@ export default function Courses() {
                 className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
                 rows={3}
               />
+            </div>
+            <div>
+              <label htmlFor="teacher_id" className="block text-xs font-medium text-slate-600 mb-1">Docente</label>
+              <select
+                id="teacher_id"
+                value={form.teacher_id}
+                onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              >
+                <option value="">Sin asignar</option>
+                {teachers.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
             </div>
             {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md py-2">
