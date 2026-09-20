@@ -34,7 +34,7 @@ Se usó un tablero Kanban de tres columnas (**Por hacer / En progreso / Hecho**)
 - Bitácora de actividad en MongoDB (polyglot persistence).
 - Pruebas automatizadas con Jest + Supertest sobre una base de datos de pruebas aislada.
 
-**Resultado:** 14 pruebas automatizadas pasando; API verificada manualmente con `curl` y con una colección de Postman.
+**Resultado:** 23 pruebas automatizadas pasando; API verificada manualmente con `curl` y con una colección de Postman.
 
 ### Sprint 2 — Interfaz de usuario
 **Objetivo:** dar una cara usable a la API para los tres roles.
@@ -58,6 +58,16 @@ Se usó un tablero Kanban de tres columnas (**Por hacer / En progreso / Hecho**)
 - Colección de Postman con las 18 peticiones principales de la API, verificada en vivo contra el backend.
 
 **Resultado:** repositorio funcional completo, con infraestructura como código y pipeline de CI/CD, listo para clonar y ejecutar.
+
+### Sprint 4 — Mejoras post-despliegue a partir de uso real
+**Objetivo:** ampliar y corregir el sistema ya desplegado en producción, a partir de necesidades detectadas usándolo de verdad.
+
+- Gestión de usuarios (crear, editar, eliminar) restringida al rol administrador, con endpoint protegido `/api/users` y una pantalla dedicada en el frontend.
+- Corrección de un defecto real detectado al usar el sistema en producción: el formulario de creación de cursos no permitía asignar un docente porque faltaba el listado de docentes disponibles; se agregó el endpoint `/api/courses/teachers` y el campo correspondiente en el formulario.
+- 9 pruebas automatizadas nuevas para el módulo de usuarios, que elevaron el total de 14 a 23.
+- Actualización de la documentación (README y este documento) para reflejar los endpoints nuevos y el número real de pruebas.
+
+**Resultado:** sistema en producción con gestión completa de usuarios y corrección de un defecto de uso real, evidenciando un ciclo real de mejora continua después del lanzamiento.
 
 ## 4. Retrospectiva
 
