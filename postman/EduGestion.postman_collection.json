@@ -1,0 +1,268 @@
+{
+  "info": {
+    "name": "EduGestión - API",
+    "description": "Colección de pruebas manuales para la API REST de EduGestión (proyecto integrado - herramientas y servicios para desarrolladores en la web).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000" },
+    { "key": "token", "value": "" },
+    { "key": "courseId", "value": "" },
+    { "key": "enrollmentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Salud y métricas",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "Métricas Prometheus",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/metrics"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Registrar usuario",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Percy Falén\",\n  \"email\": \"percy.falen@edugestion.test\",\n  \"password\": \"clave123\",\n  \"role\": \"docente\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Iniciar sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const loginData = pm.response.json();",
+                  "if (loginData.token) { pm.environment.set('token', loginData.token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@edugestion.pe\",\n  \"password\": \"Admin123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Perfil actual (me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cursos",
+      "item": [
+        {
+          "name": "Listar cursos",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/courses"
+          }
+        },
+        {
+          "name": "Crear curso",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const courseData = pm.response.json();",
+                  "if (courseData.id) { pm.environment.set('courseId', courseData.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/courses",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"EPT-01\",\n  \"name\": \"Proyectos EPT\",\n  \"description\": \"Curso de Educación para el Trabajo\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Obtener curso por id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/courses/{{courseId}}"
+          }
+        },
+        {
+          "name": "Actualizar curso",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/courses/{{courseId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Proyectos EPT - Actualizado\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar curso",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/courses/{{courseId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Matrículas",
+      "item": [
+        {
+          "name": "Listar matrículas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/enrollments"
+          }
+        },
+        {
+          "name": "Crear matrícula",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const enrollmentData = pm.response.json();",
+                  "if (enrollmentData.id) { pm.environment.set('enrollmentId', enrollmentData.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/enrollments",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_id\": 4,\n  \"course_id\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar matrícula",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/enrollments/{{enrollmentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notas",
+      "item": [
+        {
+          "name": "Listar notas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/grades"
+          }
+        },
+        {
+          "name": "Registrar nota",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/grades",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enrollment_id\": {{enrollmentId}},\n  \"evaluation_name\": \"Práctica 1\",\n  \"score\": 17\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Asistencia",
+      "item": [
+        {
+          "name": "Listar asistencia",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/attendance"
+          }
+        },
+        {
+          "name": "Registrar asistencia",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/api/attendance",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enrollment_id\": {{enrollmentId}},\n  \"attendance_date\": \"2026-09-19\",\n  \"status\": \"presente\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bitácora (solo admin)",
+      "item": [
+        {
+          "name": "Ver últimos registros de actividad",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{baseUrl}}/api/logs"
+          }
+        }
+      ]
+    }
+  ]
+}

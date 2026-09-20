@@ -1,0 +1,30 @@
+# Requiere un ingress controller instalado en el clúster (p. ej. ingress-nginx).
+# En Netlify/Vercel el frontend se despliega aparte (ver docs/ARQUITECTURA.md);
+# este Ingress aplica cuando todo el stack corre dentro de Kubernetes.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: edugestion-ingress
+  namespace: edugestion
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: edugestion.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 4000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
