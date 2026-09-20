@@ -1,0 +1,151 @@
+name: CI/CD - EduGestión
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  backend-test:
+    name: Backend - Lint & Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: edugestion
+          POSTGRES_PASSWORD: edugestion_pass
+          POSTGRES_DB: edugestion_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U edugestion"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Ejecutar pruebas (Jest + Supertest)
+        run: npm test
+        env:
+          NODE_ENV: test
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: edugestion
+          PGPASSWORD: edugestion_pass
+          PGDATABASE: edugestion_test
+          JWT_SECRET: ci_test_secret
+          JWT_EXPIRES_IN: 8h
+          MONGO_URI: mongodb://localhost:27017/edugestion_logs_test
+
+  frontend-build:
+    name: Frontend - Build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Build de producción (Vite)
+        run: npm run build
+
+  docker-build:
+    name: Construir imágenes Docker
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-build]
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Construir imagen del backend
+        run: docker build -t edugestion-backend:${{ github.sha }} ./backend
+
+      - name: Construir imagen del frontend
+        run: docker build -t edugestion-frontend:${{ github.sha }} ./frontend
+
+      - name: Iniciar sesión en GitHub Container Registry
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Etiquetar y publicar imágenes
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          docker tag edugestion-backend:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/edugestion-backend:latest
+          docker tag edugestion-frontend:${{ github.sha }} ghcr.io/${{ github.repository_owner }}/edugestion-frontend:latest
+          docker push ghcr.io/${{ github.repository_owner }}/edugestion-backend:latest
+          docker push ghcr.io/${{ github.repository_owner }}/edugestion-frontend:latest
+
+  deploy-frontend:
+    name: Desplegar frontend (Netlify)
+    runs-on: ubuntu-latest
+    needs: [frontend-build]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependencias y compilar
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publicar en Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: "frontend/dist"
+          production-deploy: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        continue-on-error: true
