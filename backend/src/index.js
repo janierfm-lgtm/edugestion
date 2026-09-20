@@ -29,11 +29,23 @@ async function runMigrations() {
   console.log('Esquema de PostgreSQL verificado/aplicado.');
 }
 
+async function seedIfRequested() {
+  if (process.env.AUTO_SEED === 'true') {
+    const seed = require('./scripts/seed');
+    await seed();
+  }
+}
+
 async function start() {
   await waitForPostgres();
   if (process.env.AUTO_MIGRATE !== 'false') {
     await runMigrations();
   }
+  // AUTO_SEED es opcional (por defecto no se ejecuta) y está pensado para
+  // despliegues públicos de demostración, donde no hay forma sencilla de
+  // entrar a una terminal para correr "npm run seed" manualmente. Es seguro
+  // dejarlo activado permanentemente: seed.js no duplica datos si ya existen.
+  await seedIfRequested();
   const app = createApp();
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
