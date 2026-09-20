@@ -50,19 +50,28 @@ async function seed() {
   }
 
   // eslint-disable-next-line no-console
-  console.log('Datos semilla insertados. Credenciales de prueba:');
+  console.log('Datos semilla verificados/insertados. Credenciales de prueba:');
   // eslint-disable-next-line no-console
   console.log('  admin@edugestion.pe / Admin123!');
   // eslint-disable-next-line no-console
   console.log('  docente@edugestion.pe / Docente123!');
   // eslint-disable-next-line no-console
   console.log('  estudiante@edugestion.pe / Estudiante123!');
-
-  await db.pool.end();
 }
 
-seed().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error('Error al insertar datos semilla:', err);
-  process.exit(1);
-});
+module.exports = seed;
+
+// Todas las inserciones de arriba usan "ON CONFLICT DO NOTHING", por lo que
+// ejecutar seed() varias veces (por ejemplo, en cada arranque del backend en
+// un despliegue público) es seguro: la segunda vez en adelante no hace nada.
+// Cuando este archivo se ejecuta directamente (npm run seed) sí cerramos el
+// pool de conexiones al terminar; cuando se importa desde index.js, no.
+if (require.main === module) {
+  seed()
+    .then(() => db.pool.end())
+    .catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('Error al insertar datos semilla:', err);
+      process.exit(1);
+    });
+}
